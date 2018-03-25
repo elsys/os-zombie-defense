@@ -6,9 +6,9 @@
 #include "ui.h"
 #define NUM_LINES 20
 
-char *arr[NUM_LINES];
-int last_msg = 0;
-pthread_mutex_t log_mutex;
+static char *arr[NUM_LINES];
+static int last_msg = 0;
+static pthread_mutex_t log_mutex;
 
 void print_stars_dots(int start_x, int y, int count) {
 	move(y, start_x);
