@@ -37,7 +37,13 @@ void init() {
 }
 
 void game_end(int zombies) {
+	pthread_mutex_lock(&mutex);
 	endwin();
+	pthread_mutex_unlock(&mutex);
+	
+	//Possible race-condition if some other thread tries to write something
+	//before we call exit
+	
 	pthread_mutex_destroy(&mutex);
 	printf("High score: %d\n", zombies * 100);
 	exit(0);
