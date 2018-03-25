@@ -8,7 +8,7 @@
 
 static char *arr[NUM_LINES];
 static int last_msg = 0;
-static pthread_mutex_t log_mutex;
+static pthread_mutex_t mutex;
 
 void print_stars_dots(int start_x, int y, int count) {
 	move(y, start_x);
@@ -21,6 +21,7 @@ void print_stars_dots(int start_x, int y, int count) {
 }
 
 void init() {
+	pthread_mutex_init(&mutex, NULL);
 	initscr();
 	cbreak();
 	noecho();
@@ -33,14 +34,13 @@ void init() {
 	start_color();
 	init_pair(1, COLOR_RED, COLOR_BLACK);
 	init_pair(2, COLOR_GREEN, COLOR_BLACK);
-	pthread_mutex_init(&log_mutex, NULL);
 }
 
 void game_end(int zombies) {
-	 endwin();
-	 pthread_mutex_destroy(&log_mutex);
-	 printf("High score: %d\n", zombies * 100);
-	 exit(0);
+	endwin();
+	pthread_mutex_destroy(&mutex);
+	printf("High score: %d\n", zombies * 100);
+	exit(0);
 }
 
 int get_input() {
@@ -48,7 +48,7 @@ int get_input() {
 }
 
 void do_print_msg(char *msg, int color) {
-	pthread_mutex_lock(&log_mutex);
+	pthread_mutex_lock(&mutex);
 	free(arr[last_msg]);
 	arr[last_msg] = malloc((strlen(msg) + 1) * sizeof(char));
 	strcpy(arr[last_msg], msg);
@@ -67,9 +67,8 @@ void do_print_msg(char *msg, int color) {
 			attroff(COLOR_PAIR(color));
 		}
 	}
-	pthread_mutex_unlock(&log_mutex);
 	refresh();
-	
+	pthread_mutex_unlock(&mutex);
 }
 
 void print_msg(char *msg) {
@@ -86,22 +85,27 @@ void print_succ(char *msg) {
 
 
 void print_gold(int gold) {
+	pthread_mutex_lock(&mutex);
 	move(8, 0);
 	clrtoeol();
 	printw("Gold: %d", gold);
 	refresh();
+	pthread_mutex_unlock(&mutex);
 }
 
 void print_soldiers(int soldiers) {
+	pthread_mutex_lock(&mutex);
 	int pos;
 	move(6, 0);
 	clrtoeol();
 	printw("Soldiers:");
 	print_stars_dots(10, 6, soldiers);
 	refresh();
+	pthread_mutex_unlock(&mutex);
 }
 
 void print_zombies(int distance, int zombies) {
+	pthread_mutex_lock(&mutex);
 	int pos;
 	for(int i = 0; i <= 5; i++) {
 		move(i, 0);
@@ -113,9 +117,11 @@ void print_zombies(int distance, int zombies) {
 	pos = 10;
 	print_stars_dots(10, 5 - distance, zombies);
 	refresh();
+	pthread_mutex_unlock(&mutex);
 }
 
 void print_health(int health) {
+	pthread_mutex_lock(&mutex);
 	move(7, 0);
 	clrtoeol(); 
 	printw("Health:");
@@ -123,6 +129,7 @@ void print_health(int health) {
 	print_stars_dots(10, 7, health);
 	attroff(COLOR_PAIR(1));
 	refresh();
+	pthread_mutex_unlock(&mutex);
 }
 
 
